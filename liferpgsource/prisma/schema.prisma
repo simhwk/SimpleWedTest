@@ -1,0 +1,92 @@
+// 내 인생 RPG — 데이터 모델
+// 변경 후: npx prisma migrate dev --name <설명>
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  nickname     String
+  createdAt    DateTime @default(now())
+
+  character    Character?
+  quests       Quest[]
+  achievements Achievement[]
+}
+
+/// 유저 1명당 캐릭터 1개. 레벨/경험치/스탯이 여기 쌓인다.
+model Character {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  level Int    @default(1)
+  exp   Int    @default(0)
+  title String @default("갓 눈뜬 초보 모험가")
+
+  strength  Int @default(1) // 힘   — 운동, 몸 쓰는 일
+  intellect Int @default(1) // 지능 — 공부, 학습
+  charm     Int @default(1) // 매력 — 사람, 관계
+  vitality  Int @default(1) // 체력 — 수면, 식사, 건강
+  will      Int @default(1) // 의지 — 미루던 일, 습관
+
+  /// 연속으로 퀘스트를 깬 일수. 하루라도 비면 1부터 다시 센다.
+  streak       Int     @default(0)
+  bestStreak   Int     @default(0)
+  /// 마지막으로 퀘스트를 깬 날짜 "YYYY-MM-DD". 날짜 비교만 하므로 문자열로 둔다.
+  lastClearDay String?
+
+  updatedAt DateTime @updatedAt
+}
+
+/// 해금한 업적. 같은 업적을 두 번 얻지 못하도록 (userId, code) 를 유니크로 묶는다.
+model Achievement {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  code       String
+  unlockedAt DateTime @default(now())
+
+  @@unique([userId, code])
+}
+
+/// 유저가 쓴 할 일 한 줄이 AI를 거쳐 퀘스트가 된다.
+model Quest {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rawInput  String // 유저가 실제로 쓴 문장
+  title     String // AI가 지어준 퀘스트명
+  story     String // 플레이버 텍스트
+  rank      String // F E D C B A S
+  expReward Int
+  stat      String // strength | intellect | charm | vitality | will
+  statGain  Int
+
+  status      String    @default("active") // active | done | abandoned
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([userId, status])
+}
+
+/// 발송한 메일 기록. SMTP 미설정 시에도 여기 남아서 확인 가능.
+model MailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  body      String
+  provider  String // smtp | console
+  error     String?
+  createdAt DateTime @default(now())
+}
