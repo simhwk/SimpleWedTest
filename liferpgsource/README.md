@@ -26,7 +26,7 @@ API 키가 없어도 앱은 그대로 돌아갑니다. 퀘스트는 규칙 기�
 
 | 변수 | 필수 | 없으면 |
 |---|---|---|
-| `DATABASE_URL` | ✅ | 기본값 `file:./dev.db` |
+| `DATABASE_URL` | ✅ | 기본값 `file:./prisma/dev.db` |
 | `SESSION_SECRET` | 배포 시 ✅ | 개발용 고정 키 사용 (운영에서는 실행 거부) |
 | `ANTHROPIC_API_KEY` | — | 키워드·글자수 기반 규칙 생성기로 대체 |
 | `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | — | 메일 내용을 콘솔에 출력하고 `MailLog` 에만 저장 |
