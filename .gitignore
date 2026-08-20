@@ -35,6 +35,10 @@ coverage/
 # TypeScript 증분 빌드 캐시
 *.tsbuildinfo
 
+# Next 가 만들고 다시 쓰는 파일 — 명령마다 내용이 바뀐다
+# (next dev 는 .next/dev/types, build·typegen 은 .next/types 를 가리킨다)
+next-env.d.ts
+
 # 로그
 npm-debug.log*
 yarn-debug.log*
