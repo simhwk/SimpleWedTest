@@ -11,7 +11,8 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
-    "test": "node --experimental-strip-types tests/streak.test.mjs"
+    "test": "node --experimental-strip-types tests/streak.test.mjs",
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
@@ -38,7 +39,6 @@
     "eslint-config-next": "16.3.1",
     "prisma": "^7.9.1",
     "tailwindcss": "^4",
-    "tsx": "^4.23.12",
     "typescript": "^5"
   }
 }

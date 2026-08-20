@@ -71,7 +71,7 @@ tests/streak.test.mjs   스트릭 경계 케이스 (npm test)
 ```bash
 npm test        # 스트릭 경계 케이스 17개 (월/연 경계, 윤년, 타임존)
 npm run lint
-npx tsc --noEmit
+npm run typecheck  # next typegen + tsc (생성 타입이 있어야 통과)
 ```
 
 ## 만들면서 다뤄본 것
