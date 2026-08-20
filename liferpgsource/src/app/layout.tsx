@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Gowun_Dodum } from "next/font/google";
+import { IBM_Plex_Sans_KR } from "next/font/google";
 
 import "./globals.css";
 
-// 한글이 예쁘게 나오는 구글 폰트. 게임 UI 느낌에 맞는 살짝 둥근 고딕.
-const sansKr = Gowun_Dodum({
-  weight: "400",
+// 판타지를 걷어냈으니 둥근 게임체도 걷어낸다. 단단하고 담백한 얼굴로.
+const sansKr = IBM_Plex_Sans_KR({
+  weight: ["400", "500", "600"],
   variable: "--font-sans-kr",
   subsets: ["latin"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "내 인생 RPG",
-  description: "오늘 할 일이 퀘스트가 된다. 깨면 경험치를 받고 레벨이 오른다.",
+  title: "첫 삽",
+  description: "미루던 일을 잘게 쪼개서 시작하게 하고, 시작한 걸 알아줍니다.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

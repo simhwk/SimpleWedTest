@@ -22,7 +22,6 @@ export default function AuthForm({ mode }: { mode: Mode }) {
     const payload = {
       email: String(form.get("email") ?? ""),
       password: String(form.get("password") ?? ""),
-      ...(isSignup ? { nickname: String(form.get("nickname") ?? "") } : {}),
     };
 
     const res = await fetch(`/api/auth/${mode}`, {
@@ -39,33 +38,23 @@ export default function AuthForm({ mode }: { mode: Mode }) {
     }
 
     // 서버 컴포넌트가 새 쿠키를 읽도록 refresh 를 함께 호출한다.
-    router.replace("/dashboard");
+    router.replace("/today");
     router.refresh();
   }
 
   return (
     <div className="w-full max-w-sm animate-rise">
       <Link href="/" className="mb-8 block text-center text-xs tracking-[0.3em] text-muted hover:text-text">
-        내 인생 RPG
+        첫 삽
       </Link>
 
       <div className="rounded-3xl border border-line bg-panel/80 p-7 backdrop-blur">
-        <h1 className="text-xl">{isSignup ? "모험가 등록" : "다시 오셨군요"}</h1>
+        <h1 className="text-xl">{isSignup ? "시작하기" : "다시 오셨군요"}</h1>
         <p className="mt-2 text-sm text-muted">
-          {isSignup ? "캐릭터를 만들고 첫 퀘스트를 받으세요." : "기록해둔 퀘스트가 기다리고 있어요."}
+          {isSignup ? "미루고 있는 일을 하나 올려두는 것부터." : "올려둔 일들이 기다리고 있어요."}
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          {isSignup && (
-            <Field
-              label="닉네임"
-              name="nickname"
-              type="text"
-              placeholder="모험가 이름"
-              maxLength={20}
-              required
-            />
-          )}
           <Field label="이메일" name="email" type="email" placeholder="you@example.com" required />
           <Field
             label="비밀번호"
@@ -87,7 +76,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
             disabled={pending}
             className="w-full rounded-xl bg-gradient-to-r from-accent to-accent-2 px-4 py-3 font-medium text-[#0a0b14] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {pending ? "잠시만요…" : isSignup ? "모험 시작하기" : "로그인"}
+            {pending ? "잠시만요…" : isSignup ? "시작하기" : "로그인"}
           </button>
         </form>
       </div>

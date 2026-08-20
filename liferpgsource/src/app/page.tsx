@@ -1,112 +1,50 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
-import { getCurrentUser } from "@/lib/auth";
-import { RANKS, RANK_KEYS, STATS, STAT_KEYS } from "@/lib/game";
-
-export default async function LandingPage() {
-  if (await getCurrentUser()) redirect("/dashboard");
-
+export default function Home() {
   return (
-    <main className="flex-1">
-      <section className="mx-auto max-w-3xl px-5 pt-24 pb-16 text-center">
-        <p className="animate-rise text-xs tracking-[0.35em] text-muted">내 인생 RPG</p>
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-20">
+      <div className="animate-rise">
+        <p className="text-xs tracking-[0.3em] text-muted">첫 삽</p>
 
-        <h1 className="animate-rise mt-6 text-4xl leading-[1.35] sm:text-5xl sm:leading-[1.3]">
-          오늘 할 일이
+        <h1 className="mt-6 text-3xl leading-snug font-semibold sm:text-4xl">
+          미루던 일은
           <br />
-          <span className="bg-gradient-to-r from-accent via-fuchsia-400 to-accent-2 bg-clip-text text-transparent">
-            퀘스트가 된다
-          </span>
+          <span className="text-accent">시작이 제일 무겁습니다.</span>
         </h1>
 
-        <p className="animate-rise mx-auto mt-6 max-w-md text-[15px] leading-relaxed text-muted">
-          &ldquo;빨래 돌리기&rdquo; 라고 적으면 AI가 의뢰서로 바꿔줍니다.
+        <p className="mt-6 leading-relaxed text-muted">
+          통째로 보면 못 합니다. 그래서 여기서는 <strong className="font-medium text-text">첫 조각 하나</strong>만
+          꺼내 드립니다. 5분이면 되는 것으로요.
           <br />
-          깨면 경험치를 받고, 능력치가 오르고, 레벨이 오릅니다.
+          다 했는지는 묻지 않습니다. <strong className="font-medium text-text">시작했는지</strong>만 묻습니다.
         </p>
 
-        <div className="animate-rise mt-9 flex flex-wrap items-center justify-center gap-3">
+        <div className="mt-10 flex flex-wrap gap-3">
           <Link
             href="/signup"
-            className="rounded-xl bg-gradient-to-r from-accent to-accent-2 px-6 py-3 font-medium text-[#0a0b14] transition hover:brightness-110"
+            className="rounded-md bg-accent px-5 py-3 text-sm font-medium text-bg transition hover:brightness-110"
           >
-            모험 시작하기
+            시작하기
           </Link>
           <Link
             href="/login"
-            className="rounded-xl border border-line px-6 py-3 text-muted transition hover:border-accent/50 hover:text-text"
+            className="rounded-md border border-line-strong px-5 py-3 text-sm text-muted transition hover:text-text"
           >
             로그인
           </Link>
         </div>
-      </section>
 
-      {/* 변환 예시 — 앱이 뭘 하는지 한 눈에 */}
-      <section className="mx-auto max-w-3xl px-5 pb-16">
-        <div className="animate-rise grid gap-4 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-          <div className="rounded-2xl border border-line bg-panel/60 p-5">
-            <p className="text-xs text-muted">내가 적은 것</p>
-            <p className="mt-2 text-[15px]">밀린 설거지 하기</p>
-          </div>
-
-          <div className="animate-pulse-glow text-center text-2xl text-accent-2">
-            <span className="sm:hidden">↓</span>
-            <span className="hidden sm:inline">→</span>
-          </div>
-
-          <div
-            className="rounded-2xl border p-5"
-            style={{
-              borderColor: `${RANKS.D.glow}55`,
-              background: `linear-gradient(140deg, ${RANKS.D.glow}14, transparent 70%), var(--panel)`,
-            }}
-          >
-            <p className="text-xs" style={{ color: RANKS.D.glow }}>
-              D급 의뢰 · +{RANKS.D.exp} EXP · 의지 +1
-            </p>
-            <p className="mt-2 text-[15px]">쌓인 그릇 산맥의 정화</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              싱크대에 잠든 도자기 유물들이 그대의 손길을 기다린다. 물의 힘으로 이들을 되돌려라.
-            </p>
+        <div className="mt-16 rounded-lg border border-line bg-surface p-6">
+          <p className="text-xs tracking-[0.18em] text-muted">이렇게 됩니다</p>
+          <p className="mt-4 text-sm text-muted">
+            <span className="num text-warm">23일</span> 묵힌 «밀린 세금 서류 정리해서 제출»
+          </p>
+          <div className="mt-3 rounded-md border border-accent/50 bg-accent-soft px-4 py-3">
+            <p className="text-xs tracking-[0.14em] text-accent">첫 삽 · 5분</p>
+            <p className="mt-1.5 text-sm">서류 담을 폴더 하나 만들기. 그것만 하세요.</p>
           </div>
         </div>
-      </section>
-
-      <section className="mx-auto max-w-3xl px-5 pb-24">
-        <div className="grid gap-6 sm:grid-cols-2">
-          <div className="rounded-2xl border border-line bg-panel/60 p-6">
-            <h2 className="text-sm text-muted">능력치 5종</h2>
-            <ul className="mt-4 space-y-2.5">
-              {STAT_KEYS.map((key) => (
-                <li key={key} className="flex items-baseline gap-2.5 text-sm">
-                  <span>{STATS[key].emoji}</span>
-                  <span className="w-9">{STATS[key].label}</span>
-                  <span className="text-muted">{STATS[key].desc}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="rounded-2xl border border-line bg-panel/60 p-6">
-            <h2 className="text-sm text-muted">난이도 7단계</h2>
-            <ul className="mt-4 space-y-2.5">
-              {RANK_KEYS.map((key) => (
-                <li key={key} className="flex items-baseline gap-2.5 text-sm">
-                  <span
-                    className="w-6 shrink-0 text-center font-medium"
-                    style={{ color: RANKS[key].glow }}
-                  >
-                    {key}
-                  </span>
-                  <span className="text-muted">{RANKS[key].desc}</span>
-                  <span className="ml-auto shrink-0 text-xs text-muted">+{RANKS[key].exp}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+      </div>
     </main>
   );
 }

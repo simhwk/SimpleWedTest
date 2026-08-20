@@ -68,15 +68,12 @@ async function currentUserId(): Promise<string | null> {
   }
 }
 
-/** 로그인한 유저와 캐릭터를 함께 가져온다. 비로그인이면 null. */
+/** 로그인한 유저. 비로그인이면 null. */
 export async function getCurrentUser() {
   const userId = await currentUserId();
   if (!userId) return null;
 
-  return prisma.user.findUnique({
-    where: { id: userId },
-    include: { character: true },
-  });
+  return prisma.user.findUnique({ where: { id: userId } });
 }
 
 export type CurrentUser = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;

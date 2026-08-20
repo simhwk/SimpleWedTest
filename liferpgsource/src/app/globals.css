@@ -1,95 +1,74 @@
 @import "tailwindcss";
 
+/* 판타지를 걷어낸 뒤의 팔레트.
+   중립색은 아주 살짝 초록으로 기울여 차분하게 두고,
+   따뜻한 호박색은 오직 "인정"의 순간에만 쓴다. */
 :root {
-  --bg: #07080f;
-  --bg-soft: #0e1120;
-  --panel: #141829;
-  --panel-2: #1b2039;
-  --line: #262c4a;
-  --text: #eef0ff;
-  --muted: #8b93b8;
-  --accent: #7c5cff;
-  --accent-2: #22d3ee;
-  --gold: #fbbf24;
+  --bg: #f6f8f7;
+  --surface: #ffffff;
+  --surface-2: #eef2f0;
+  --line: #dce4e1;
+  --line-strong: #bcc8c4;
+  --text: #121c1a;
+  --muted: #5b6a66;
+  --accent: #0d6b60;
+  --accent-soft: #e3f0ed;
+  --warm: #8f5f0c;
+  --warm-soft: #f9efdc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1312;
+    --surface: #151d1b;
+    --surface-2: #1c2624;
+    --line: #26312e;
+    --line-strong: #3a4844;
+    --text: #e5edea;
+    --muted: #8b9c97;
+    --accent: #4cc0b0;
+    --accent-soft: #122a27;
+    --warm: #e2a54e;
+    --warm-soft: #2a2113;
+  }
 }
 
 @theme inline {
   --color-bg: var(--bg);
-  --color-bg-soft: var(--bg-soft);
-  --color-panel: var(--panel);
-  --color-panel-2: var(--panel-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
-  --color-accent-2: var(--accent-2);
-  --color-gold: var(--gold);
+  --color-accent-soft: var(--accent-soft);
+  --color-warm: var(--warm);
+  --color-warm-soft: var(--warm-soft);
   --font-sans: var(--font-sans-kr);
 }
 
-html {
-  background: var(--bg);
-}
+html { background: var(--bg); }
 
 body {
-  background:
-    radial-gradient(900px 500px at 12% -10%, rgba(124, 92, 255, 0.18), transparent 60%),
-    radial-gradient(800px 500px at 92% 0%, rgba(34, 211, 238, 0.12), transparent 55%),
-    var(--bg);
-  background-attachment: fixed;
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans-kr), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* 스크롤바도 앱 톤에 맞춘다 */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: var(--line);
-  border-radius: 99px;
-  border: 3px solid transparent;
-  background-clip: content-box;
-}
-::-webkit-scrollbar-thumb:hover { background: #37406b; background-clip: content-box; }
+.num { font-variant-numeric: tabular-nums; }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@keyframes pop {
-  0% { opacity: 0; transform: scale(0.9); }
-  60% { transform: scale(1.04); }
-  100% { opacity: 1; transform: scale(1); }
-}
-@keyframes float-up {
-  0% { opacity: 0; transform: translateY(6px); }
-  25% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-34px); }
-}
-@keyframes shimmer {
-  from { background-position: -200% 0; }
-  to { background-position: 200% 0; }
-}
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
-}
+.animate-rise { animation: rise .4s cubic-bezier(.22, 1, .36, 1) both; }
 
-.animate-rise { animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.animate-pop { animation: pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.animate-float-up { animation: float-up 1.1s ease-out forwards; }
-.animate-pulse-glow { animation: pulse-glow 2.4s ease-in-out infinite; }
-
-/* 로딩 중 퀘스트 카드에 흐르는 빛 */
-.shimmer {
-  background: linear-gradient(90deg, var(--panel) 0%, var(--panel-2) 50%, var(--panel) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s linear infinite;
-}
+/* 조각을 기다리는 동안. 요란하지 않게 — 이 앱은 조용해야 한다. */
+@keyframes breathe { 0%, 100% { opacity: .45; } 50% { opacity: .8; } }
+.animate-breathe { animation: breathe 1.6s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-rise, .animate-pop, .animate-float-up, .animate-pulse-glow, .shimmer {
-    animation: none;
-  }
+  .animate-rise, .animate-breathe { animation: none; }
 }
