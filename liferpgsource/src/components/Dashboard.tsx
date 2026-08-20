@@ -7,7 +7,8 @@ import AchievementPanel from "@/components/AchievementPanel";
 import CharacterCard, { type CharacterView } from "@/components/CharacterCard";
 import QuestCard, { type QuestView } from "@/components/QuestCard";
 import { ACHIEVEMENT_BY_CODE } from "@/lib/achievements";
-import { STATS, isStatKey } from "@/lib/game";
+import type { Suggestion } from "@/lib/board";
+import { OUTCOMES, STATS, isStatKey, type OutcomeKind } from "@/lib/game";
 
 type Toast = { id: number; text: string; tone: "exp" | "level" | "streak" | "info" | "error" };
 
@@ -25,6 +26,8 @@ export default function Dashboard({
   activeQuests,
   doneQuests,
   streak: initialStreak,
+  board,
+  critChance,
   achievements: initialAchievements,
   aiEnabled,
   mailEnabled,
@@ -34,6 +37,8 @@ export default function Dashboard({
   activeQuests: QuestView[];
   doneQuests: QuestView[];
   streak: number;
+  board: Suggestion[];
+  critChance: number;
   achievements: string[];
   aiEnabled: boolean;
   mailEnabled: boolean;
@@ -45,6 +50,8 @@ export default function Dashboard({
   const [streak, setStreak] = useState(initialStreak);
   const [achievements, setAchievements] = useState(initialAchievements);
   const [input, setInput] = useState("");
+  // 수락한 제안은 게시판에서 지운다. 새로고침하면 서버가 오늘 목록을 다시 준다.
+  const [taken, setTaken] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [sendingReport, setSendingReport] = useState(false);
@@ -59,10 +66,9 @@ export default function Dashboard({
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600);
   }
 
-  async function createQuest(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const rawInput = input.trim();
-    if (!rawInput || creating) return;
+  /** 직접 적은 것이든 게시판에서 고른 것이든 등록 경로는 하나로 둔다. */
+  async function submitQuest(rawInput: string): Promise<boolean> {
+    if (!rawInput || creating) return false;
 
     setCreating(true);
     const res = await fetch("/api/quests", {
@@ -72,14 +78,28 @@ export default function Dashboard({
     }).catch(() => null);
 
     const data = await res?.json().catch(() => null);
-    if (!res?.ok) {
+    const ok = Boolean(res?.ok);
+
+    if (!ok) {
       toast(data?.error ?? "퀘스트를 만들지 못했어요.", "error");
     } else {
       setQuests((q) => [data.quest, ...q]);
-      setInput("");
       toast(`${data.quest.rank}급 의뢰가 도착했다`, "info");
     }
     setCreating(false);
+    return ok;
+  }
+
+  async function createQuest(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (await submitQuest(input.trim())) setInput("");
+  }
+
+  /** 게시판에서 고른 제안. 실패하면 다시 고를 수 있게 목록에 되돌린다. */
+  async function acceptSuggestion(suggestion: Suggestion) {
+    setTaken((t) => [...t, suggestion.text]);
+    const ok = await submitQuest(suggestion.text);
+    if (!ok) setTaken((t) => t.filter((x) => x !== suggestion.text));
   }
 
   async function completeQuest(quest: QuestView) {
@@ -95,6 +115,15 @@ export default function Dashboard({
 
       const rawStat = String(data.reward.stat);
       const stat = isStatKey(rawStat) ? rawStat : "will";
+
+      // 결과부터 알린다 — 숫자보다 "터졌다" 가 먼저 눈에 들어와야 한다.
+      const outcome: OutcomeKind = data.reward.outcome ?? "normal";
+      const label = OUTCOMES[outcome].label;
+      if (label) {
+        toast(`${outcome === "critical" ? "✦ " : ""}${label} — 보상 ${OUTCOMES[outcome].multiplier}배`,
+          outcome === "critical" ? "level" : "streak");
+      }
+
       toast(`+${data.reward.exp} EXP · ${STATS[stat].label} +${data.reward.statGain}`, "exp");
 
       if (data.reward.levelsGained > 0) {
@@ -145,6 +174,9 @@ export default function Dashboard({
     setSendingReport(false);
   }
 
+  // 이미 받은 제안은 게시판에서 빼둔다.
+  const visibleBoard = board.filter((s) => !taken.includes(s.text));
+
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.replace("/");
@@ -163,6 +195,12 @@ export default function Dashboard({
       <div className="grid gap-6 lg:grid-cols-[340px_1fr] lg:items-start">
         <aside className="space-y-4 lg:sticky lg:top-8">
           <CharacterCard nickname={nickname} character={character} streak={streak} />
+
+          <div className="rounded-2xl border border-line bg-panel/60 px-4 py-3 text-xs leading-relaxed text-muted">
+            <span className="text-gold">✦ 대성공 확률 {Math.round(critChance * 100)}%</span>
+            <br />
+            연속 달성 하루마다 1%p 씩 오릅니다. 대성공이 뜨면 경험치가 두 배, 능력치도 하나 더.
+          </div>
 
           <button
             onClick={sendReport}
@@ -208,6 +246,28 @@ export default function Dashboard({
             </button>
           </form>
 
+          {visibleBoard.length > 0 && (
+            <div className="mt-5">
+              <p className="text-xs tracking-[0.18em] text-muted">
+                오늘의 의뢰 <span className="tracking-normal">— 적기 귀찮은 날엔 눌러서 받으세요</span>
+              </p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {visibleBoard.map((s) => (
+                  <button
+                    key={s.text}
+                    type="button"
+                    onClick={() => acceptSuggestion(s)}
+                    disabled={creating}
+                    className="rounded-full border border-line bg-panel/50 px-3.5 py-1.5 text-sm text-muted transition hover:border-accent/50 hover:text-text disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <span className="mr-1.5" aria-hidden="true">{STATS[s.stat].emoji}</span>
+                    {s.text}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 space-y-3">
             {creating && (
               <div className="shimmer h-32 rounded-2xl border border-line" aria-label="퀘스트 생성 중" />
@@ -227,7 +287,7 @@ export default function Dashboard({
               <div className="rounded-2xl border border-dashed border-line px-6 py-14 text-center text-sm text-muted">
                 수락 중인 의뢰가 없습니다.
                 <br />
-                위에 오늘 할 일을 적어보세요.
+                위에서 오늘의 의뢰를 고르거나, 직접 한 줄 적어보세요.
               </div>
             )}
           </div>

@@ -96,3 +96,53 @@ export function withParticle(word: string, withBatchim: string, withoutBatchim: 
   const hasBatchim = (code - 0xac00) % 28 !== 0;
   return `${word}${hasBatchim ? withBatchim : withoutBatchim}`;
 }
+
+/* ------------------------------------------------------------------ *
+ * 완수 결과
+ *
+ * 같은 등급이어도 매번 같은 보상이 나오면 깰 이유가 옅어진다.
+ * 그래서 완수 시 한 번 굴려서 결과를 가른다.
+ *
+ * 대성공 확률은 스트릭에 비례한다 — 스트릭이 숫자로만 남지 않고
+ * 실제로 보상을 키우게 해서, "매일 하면 이득"이 규칙으로 드러나게 한다.
+ * ------------------------------------------------------------------ */
+
+export const OUTCOMES = {
+  normal: { label: null, multiplier: 1, statBonus: 0, glow: null },
+  great: { label: "순조로웠다", multiplier: 1.5, statBonus: 0, glow: "#4ade80" },
+  critical: { label: "대성공", multiplier: 2, statBonus: 1, glow: "#fbbf24" },
+} as const;
+
+export type OutcomeKind = keyof typeof OUTCOMES;
+
+const GREAT_CHANCE = 0.2;
+const CRIT_BASE = 0.08;
+/** 스트릭 하루당 대성공 확률 +1%p. 열흘이면 8% → 18% 로 두 배가 넘는다. */
+const CRIT_PER_STREAK = 0.01;
+const CRIT_STREAK_CAP = 10;
+
+/** 지금 스트릭에서의 대성공 확률. UI 에 그대로 보여주기 위해 따로 뺐다. */
+export function criticalChance(streak: number): number {
+  const bounded = Math.max(0, Math.min(streak, CRIT_STREAK_CAP));
+  return CRIT_BASE + bounded * CRIT_PER_STREAK;
+}
+
+/**
+ * 완수 한 번의 결과를 굴린다.
+ * random 을 주입받는 이유는 테스트에서 확률을 고정하기 위해서다.
+ */
+export function rollOutcome(streak: number, random: () => number = Math.random): OutcomeKind {
+  const roll = random();
+  if (roll < criticalChance(streak)) return "critical";
+  if (roll < criticalChance(streak) + GREAT_CHANCE) return "great";
+  return "normal";
+}
+
+/** 결과를 실제 보상 숫자로 옮긴다. 경험치는 정수로 떨어뜨린다. */
+export function applyOutcome(baseExp: number, baseStatGain: number, kind: OutcomeKind) {
+  const o = OUTCOMES[kind];
+  return {
+    exp: Math.round(baseExp * o.multiplier),
+    statGain: baseStatGain + o.statBonus,
+  };
+}

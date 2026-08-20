@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import { newlyUnlocked, type AchievementContext } from "@/lib/achievements";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { applyExp, isStatKey, titleForLevel, STAT_KEYS } from "@/lib/game";
-import { advanceStreak, dayKey } from "@/lib/streak";
+import { applyExp, applyOutcome, isStatKey, rollOutcome, titleForLevel, STAT_KEYS } from "@/lib/game";
+import { advanceStreak, dayKey, displayStreak } from "@/lib/streak";
 
 export async function POST(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -20,9 +20,16 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
   }
 
   const character = user.character;
-  const { level, exp, levelsGained } = applyExp(character.level, character.exp, quest.expReward);
+  const today = dayKey();
   const statKey = isStatKey(quest.stat) ? quest.stat : "will";
-  const streak = advanceStreak(character, dayKey());
+
+  // 결과는 서버에서 굴린다 — 클라이언트가 굴리면 마음에 들 때까지 다시 굴릴 수 있다.
+  // 확률의 기준은 화면에 보이는 스트릭과 같은 값이라, 끊긴 스트릭은 0 으로 친다.
+  const outcome = rollOutcome(displayStreak(character, today));
+  const reward = applyOutcome(quest.expReward, quest.statGain, outcome);
+
+  const { level, exp, levelsGained } = applyExp(character.level, character.exp, reward.exp);
+  const streak = advanceStreak(character, today);
 
   // 퀘스트 완료와 캐릭터 성장은 한 트랜잭션으로 묶는다. 경험치만 오르고 퀘스트가 안 닫히면 무한 파밍이 된다.
   const [, updatedCharacter] = await prisma.$transaction([
@@ -39,7 +46,7 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
         streak: streak.streak,
         bestStreak: streak.bestStreak,
         lastClearDay: streak.lastClearDay,
-        [statKey]: { increment: quest.statGain },
+        [statKey]: { increment: reward.statGain },
       },
     }),
   ]);
@@ -48,7 +55,7 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
 
   return NextResponse.json({
     character: updatedCharacter,
-    reward: { exp: quest.expReward, stat: statKey, statGain: quest.statGain, levelsGained },
+    reward: { exp: reward.exp, baseExp: quest.expReward, stat: statKey, statGain: reward.statGain, levelsGained, outcome },
     streak: { value: streak.streak, extended: streak.extended, best: streak.bestStreak },
     unlocked,
   });
